@@ -8,6 +8,8 @@ typedef enum {
     BC_LOAD_NAME,          
     BC_STORE_NAME,         
     BC_PRINT,
+    BC_INPUT,
+    BC_TOINT,
     BC_BINARY_ADD,         
     BC_BINARY_SUB,         
     BC_BINARY_MUL,         

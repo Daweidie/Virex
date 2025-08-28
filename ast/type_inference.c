@@ -62,6 +62,14 @@ InferredType infer_type(TypeInferenceContext* ctx, ASTNode* node) {
             return infer_type(ctx, node->data.unaryop.expr);
         }
         
+        case AST_INPUT: {
+            return TYPE_STRING;
+        }
+        
+        case AST_TOINT: {
+            return TYPE_INTEGER;
+        }
+        
         case AST_ASSIGN: {
             InferredType right_type = infer_type(ctx, node->data.assign.right);
             if (node->data.assign.left->type == AST_IDENTIFIER) {
@@ -109,20 +117,22 @@ void set_variable_type(TypeInferenceContext* ctx, const char* var_name, Inferred
 const char* type_to_cpp_string(InferredType type) {
     switch (type) {
         case TYPE_INTEGER:
-            return "int";
+            return "long long";
         case TYPE_FLOAT:
-            return "double";
+            return "float";
         case TYPE_STRING:
             return "VString";
         default:
             return "auto"; 
     }
 }
+
 InferredType infer_type_from_value(const char* value) {
     if (!value) return TYPE_UNKNOWN;
     if (strlen(value) == 0) {
         return TYPE_STRING;
     }
+    
     int has_quote = 0;
     int has_non_digit = 0;
     int has_dot = 0;
@@ -136,14 +146,18 @@ InferredType infer_type_from_value(const char* value) {
             has_non_digit = 1;
         }
     }
+    
     if (has_quote) {
         return TYPE_STRING;
     }
+    
     if (has_non_digit) {
         return TYPE_STRING;
     }
+    
     if (has_dot) {
         return TYPE_FLOAT;
     }
+    
     return TYPE_INTEGER;
 }

@@ -29,6 +29,8 @@ char* my_strndup(const char* str, size_t n) {
 [ \t\r\n]           ; 
 
 "print"             return PRINT;
+"input"             return INPUT;
+"toint"             return TOINT;
 "i32"               return TYPE_I32;
 "i64"               return TYPE_I64;
 "f32"               return TYPE_F32;

@@ -24,8 +24,6 @@ clean:
 	rm -f $(TARGET) $(OBJECTS) parser/lex.yy.c parser/parser.tab.c parser/parser.tab.h
 
 rebuild: clean all
-
-# Run test
 test: all
 	./$(TARGET) test.vix
 

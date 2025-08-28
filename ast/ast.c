@@ -29,6 +29,20 @@ ASTNode* create_print_node(ASTNode* expr) {
     return node;
 }
 
+ASTNode* create_input_node(ASTNode* prompt) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_INPUT;
+    node->data.input.prompt = prompt;
+    return node;
+}
+
+ASTNode* create_toint_node(ASTNode* expr) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_TOINT;
+    node->data.toint.expr = expr;
+    return node;
+}
+
 ASTNode* create_expression_list_node() {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = AST_EXPRESSION_LIST;
@@ -124,6 +138,14 @@ void free_ast(ASTNode* node) {
             free_ast(node->data.print.expr);
             break;
             
+        case AST_INPUT:
+            free_ast(node->data.input.prompt);
+            break;
+            
+        case AST_TOINT:
+            free_ast(node->data.toint.expr);
+            break;
+            
         case AST_EXPRESSION_LIST:
             for (int i = 0; i < node->data.expression_list.expression_count; i++) {
                 free_ast(node->data.expression_list.expressions[i]);
@@ -184,6 +206,16 @@ void print_ast(ASTNode* node, int indent) {
         case AST_PRINT:
             printf("Print\n");
             print_ast(node->data.print.expr, indent + 1);
+            break;
+            
+        case AST_INPUT:
+            printf("Input\n");
+            print_ast(node->data.input.prompt, indent + 1);
+            break;
+            
+        case AST_TOINT:
+            printf("ToInt\n");
+            print_ast(node->data.toint.expr, indent + 1);
             break;
             
         case AST_EXPRESSION_LIST:

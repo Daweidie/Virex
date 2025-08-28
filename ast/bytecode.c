@@ -87,13 +87,19 @@ void generate_bytecode_print(ByteCodeGen* gen, ASTNode* node) {
         if (cnt <= 0) {
             return;
         }
+        
+        if (cnt == 1) {
+            generate_bytecode(gen, expr_list->data.expression_list.expressions[0]);
+            add_bytecode(gen, BC_PRINT);
+            return;
+        }
         generate_bytecode(gen, expr_list->data.expression_list.expressions[0]);
         for (int i = 1; i < cnt; i++) {
-            generate_bytecode(gen, expr_list->data.expression_list.expressions[i]);
             add_bytecode(gen, BC_LOAD_CONST_STRING);
-            gen->bytecode->codes[gen->bytecode->count - 1].operand.string_value = malloc(2);
+            gen->bytecode->codes[gen->bytecode->count - 1].operand.string_value = malloc(strlen(" ") + 1);
             strcpy(gen->bytecode->codes[gen->bytecode->count - 1].operand.string_value, " ");
             add_bytecode(gen, BC_BINARY_CONCAT);
+            generate_bytecode(gen, expr_list->data.expression_list.expressions[i]);
             add_bytecode(gen, BC_BINARY_CONCAT);
         }
         add_bytecode(gen, BC_PRINT);
@@ -101,6 +107,18 @@ void generate_bytecode_print(ByteCodeGen* gen, ASTNode* node) {
         generate_bytecode(gen, node->data.print.expr);
         add_bytecode(gen, BC_PRINT);
     }
+}
+
+void generate_bytecode_input(ByteCodeGen* gen, ASTNode* node) {
+    if (node->type != AST_INPUT) return;
+    generate_bytecode(gen, node->data.input.prompt);
+    add_bytecode(gen, BC_INPUT);
+}
+
+void generate_bytecode_toint(ByteCodeGen* gen, ASTNode* node) {
+    if (node->type != AST_TOINT) return;
+    generate_bytecode(gen, node->data.toint.expr);
+    add_bytecode(gen, BC_TOINT);
 }
 
 void generate_bytecode_expression_list(ByteCodeGen* gen, ASTNode* node) {
@@ -205,6 +223,12 @@ void generate_bytecode(ByteCodeGen* gen, ASTNode* node) {
         case AST_PRINT:
             generate_bytecode_print(gen, node);
             break;
+        case AST_INPUT:
+            generate_bytecode_input(gen, node);
+            break;
+        case AST_TOINT:
+            generate_bytecode_toint(gen, node);
+            break;
         case AST_EXPRESSION_LIST:
             generate_bytecode_expression_list(gen, node);
             break;
@@ -235,7 +259,7 @@ void generate_bytecode(ByteCodeGen* gen, ASTNode* node) {
 }
 
 void print_bytecode(ByteCodeList* list) {
-    printf("字节码:\n");
+    printf("Bytecode:\n");
     for (int i = 0; i < list->count; i++) {
         printf("%4d: ", i);
         switch (list->codes[i].op) {
@@ -253,6 +277,12 @@ void print_bytecode(ByteCodeList* list) {
                 break;
             case BC_STORE_NAME:
                 printf("STORE_NAME %d\n", list->codes[i].operand.var_index);
+                break;
+            case BC_INPUT:
+                printf("INPUT\n");
+                break;
+            case BC_TOINT:
+                printf("TOINT\n");
                 break;
             case BC_PRINT:
                 printf("PRINT\n");

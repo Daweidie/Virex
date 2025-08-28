@@ -20,7 +20,9 @@ typedef enum {
     AST_TYPE_FLOAT32,
     AST_TYPE_FLOAT64,
     AST_TYPE_STRING,
-    AST_EXPRESSION_LIST
+    AST_EXPRESSION_LIST,
+    AST_INPUT,
+    AST_TOINT
 } NodeType;
 
 typedef enum {
@@ -78,12 +80,20 @@ typedef struct ASTNode {
         struct {
             char* name;
         } identifier;
+        struct {
+            struct ASTNode* prompt;
+        } input;
+        struct {
+            struct ASTNode* expr;
+        } toint;
     } data;
 } ASTNode;
 
 ASTNode* create_program_node();
 void add_statement_to_program(ASTNode* program, ASTNode* statement);
 ASTNode* create_print_node(ASTNode* expr);
+ASTNode* create_input_node(ASTNode* prompt);
+ASTNode* create_toint_node(ASTNode* expr);
 ASTNode* create_expression_list_node();
 void add_expression_to_list(ASTNode* list, ASTNode* expr);
 ASTNode* create_assign_node(ASTNode* left, ASTNode* right);

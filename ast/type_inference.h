@@ -4,6 +4,7 @@
 typedef enum {
     TYPE_UNKNOWN,
     TYPE_INTEGER,
+    TYPE_INT64,
     TYPE_FLOAT,
     TYPE_STRING
 } InferredType;

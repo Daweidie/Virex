@@ -22,15 +22,15 @@ ASTNode* root;
 %token <str> IDENTIFIER STRING
 %token <num_int> NUMBER_INT
 %token <num_float> NUMBER_FLOAT
-%token PRINT TYPE_I32 TYPE_I64 TYPE_F32 TYPE_F64 TYPE_STR
+%token PRINT INPUT TOINT TYPE_I32 TYPE_I64 TYPE_F32 TYPE_F64 TYPE_STR
 %token ASSIGN PLUS MINUS MULTIPLY DIVIDE MODULO POWER
 %token LPAREN RPAREN SEMICOLON COMMA
 %token ERROR
 
 %type <node> program statement_list statement 
-%type <node> print_statement assignment_statement
+%type <node> print_statement assignment_statement input_statement
 %type <node> expression expression_list term factor power factor_unary
-%type <node> literal identifier
+%type <node> literal identifier toint_expression
 
 %start program
 
@@ -38,6 +38,10 @@ ASTNode* root;
 
 program
     : statement_list { root = $$ = $1; }
+    ;
+
+toint_expression
+    : TOINT LPAREN expression RPAREN { $$ = create_toint_node($3); }
     ;
 
 statement_list
@@ -54,8 +58,10 @@ statement_list
 statement
     : print_statement SEMICOLON     { $$ = $1; }
     | assignment_statement SEMICOLON { $$ = $1; }
+    | input_statement SEMICOLON     { $$ = $1; }
     | print_statement               { $$ = $1; }
     | assignment_statement          { $$ = $1; }
+    | input_statement               { $$ = $1; }
     ;
 
 print_statement
@@ -66,6 +72,17 @@ print_statement
 
 assignment_statement
     : identifier ASSIGN expression  { $$ = create_assign_node($1, $3); }
+    ;
+
+input_statement
+    : identifier ASSIGN INPUT LPAREN STRING RPAREN { 
+        ASTNode* prompt = create_string_node($5);
+        $$ = create_assign_node($1, create_input_node(prompt)); 
+    }
+    | identifier ASSIGN INPUT LPAREN RPAREN { 
+        ASTNode* prompt = create_string_node("");
+        $$ = create_assign_node($1, create_input_node(prompt)); 
+    }
     ;
 
 expression_list
@@ -100,25 +117,26 @@ factor
 
 power
     : factor_unary                  { $$ = $1; }
-    | factor_unary POWER power      { $$ = create_binop_node(OP_POW, $1, $3); }
+    | factor_unary POWER factor     { $$ = create_binop_node(OP_POW, $1, $3); }
     ;
 
 factor_unary
-    : PLUS factor_unary             { $$ = create_unaryop_node(OP_PLUS, $2); }
-    | MINUS factor_unary            { $$ = create_unaryop_node(OP_MINUS, $2); }
-    | literal                       { $$ = $1; }
+    : literal                       { $$ = $1; }
     | identifier                    { $$ = $1; }
+    | toint_expression              { $$ = $1; }
+    | PLUS factor_unary             { $$ = create_unaryop_node(OP_PLUS, $2); }
+    | MINUS factor_unary            { $$ = create_unaryop_node(OP_MINUS, $2); }
     | LPAREN expression RPAREN      { $$ = $2; }
     ;
 
 literal
     : NUMBER_INT                    { $$ = create_num_int_node($1); }
     | NUMBER_FLOAT                  { $$ = create_num_float_node($1); }
-    | STRING                        { $$ = create_string_node($1); free($1); }
+    | STRING                        { $$ = create_string_node($1); }
     ;
 
 identifier
-    : IDENTIFIER                    { $$ = create_identifier_node($1); free($1); }
+    : IDENTIFIER                    { $$ = create_identifier_node($1); }
     ;
 
 %%
