@@ -19,7 +19,8 @@ typedef enum {
     AST_TYPE_INT64,
     AST_TYPE_FLOAT32,
     AST_TYPE_FLOAT64,
-    AST_TYPE_STRING
+    AST_TYPE_STRING,
+    AST_EXPRESSION_LIST
 } NodeType;
 
 typedef enum {
@@ -28,7 +29,9 @@ typedef enum {
     OP_MUL,      // *
     OP_DIV,      // /
     OP_MOD,      // %
-    OP_POW       // **
+    OP_POW,      // **
+    OP_CONCAT,   // 合并+
+    OP_REPEAT    // 重复*
 } BinOpType;
 
 typedef enum {
@@ -46,6 +49,10 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* expr;
         } print;
+        struct {
+            struct ASTNode** expressions;
+            int expression_count;
+        } expression_list;
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
@@ -77,6 +84,8 @@ typedef struct ASTNode {
 ASTNode* create_program_node();
 void add_statement_to_program(ASTNode* program, ASTNode* statement);
 ASTNode* create_print_node(ASTNode* expr);
+ASTNode* create_expression_list_node();
+void add_expression_to_list(ASTNode* list, ASTNode* expr);
 ASTNode* create_assign_node(ASTNode* left, ASTNode* right);
 ASTNode* create_binop_node(BinOpType op, ASTNode* left, ASTNode* right);
 ASTNode* create_unaryop_node(UnaryOpType op, ASTNode* expr);

@@ -22,14 +22,14 @@ ASTNode* root;
 %token <str> IDENTIFIER STRING
 %token <num_int> NUMBER_INT
 %token <num_float> NUMBER_FLOAT
-%token PRINT VAR TYPE_I32 TYPE_I64 TYPE_F32 TYPE_F64 TYPE_STR
+%token PRINT TYPE_I32 TYPE_I64 TYPE_F32 TYPE_F64 TYPE_STR
 %token ASSIGN PLUS MINUS MULTIPLY DIVIDE MODULO POWER
-%token LPAREN RPAREN SEMICOLON
+%token LPAREN RPAREN SEMICOLON COMMA
 %token ERROR
 
 %type <node> program statement_list statement 
-%type <node> print_statement assignment_statement var_declaration
-%type <node> expression term factor power factor_unary
+%type <node> print_statement assignment_statement
+%type <node> expression expression_list term factor power factor_unary
 %type <node> literal identifier
 
 %start program
@@ -54,23 +54,31 @@ statement_list
 statement
     : print_statement SEMICOLON     { $$ = $1; }
     | assignment_statement SEMICOLON { $$ = $1; }
-    | var_declaration SEMICOLON     { $$ = $1; }
     | print_statement               { $$ = $1; }
     | assignment_statement          { $$ = $1; }
-    | var_declaration               { $$ = $1; }
     ;
 
 print_statement
     : PRINT expression              { $$ = create_print_node($2); }
     | PRINT LPAREN expression RPAREN { $$ = create_print_node($3); }
+    | PRINT LPAREN expression_list RPAREN { $$ = create_print_node($3); }
     ;
 
 assignment_statement
     : identifier ASSIGN expression  { $$ = create_assign_node($1, $3); }
     ;
 
-var_declaration
-    : VAR identifier ASSIGN expression { $$ = create_assign_node($2, $4); }
+expression_list
+    : expression COMMA expression   { 
+                                      ASTNode* list = create_expression_list_node();
+                                      add_expression_to_list(list, $1);
+                                      add_expression_to_list(list, $3);
+                                      $$ = list;
+                                    }
+    | expression_list COMMA expression { 
+                                      add_expression_to_list($1, $3);
+                                      $$ = $1;
+                                    }
     ;
 
 expression

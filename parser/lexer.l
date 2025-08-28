@@ -29,7 +29,6 @@ char* my_strndup(const char* str, size_t n) {
 [ \t\r\n]           ; 
 
 "print"             return PRINT;
-"var"               return VAR;
 "i32"               return TYPE_I32;
 "i64"               return TYPE_I64;
 "f32"               return TYPE_F32;
@@ -48,6 +47,8 @@ char* my_strndup(const char* str, size_t n) {
 ")"                 return RPAREN;
 
 ";"                 return SEMICOLON;
+","                 return COMMA;
+
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
                         yylval.str = strdup(yytext);

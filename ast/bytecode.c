@@ -81,8 +81,33 @@ void generate_bytecode_program(ByteCodeGen* gen, ASTNode* node) {
 
 void generate_bytecode_print(ByteCodeGen* gen, ASTNode* node) {
     if (node->type != AST_PRINT) return;
-    generate_bytecode(gen, node->data.print.expr);
-    add_bytecode(gen, BC_PRINT);
+    if (node->data.print.expr->type == AST_EXPRESSION_LIST) {
+        ASTNode* expr_list = node->data.print.expr;
+        int cnt = expr_list->data.expression_list.expression_count;
+        if (cnt <= 0) {
+            return;
+        }
+        generate_bytecode(gen, expr_list->data.expression_list.expressions[0]);
+        for (int i = 1; i < cnt; i++) {
+            generate_bytecode(gen, expr_list->data.expression_list.expressions[i]);
+            add_bytecode(gen, BC_LOAD_CONST_STRING);
+            gen->bytecode->codes[gen->bytecode->count - 1].operand.string_value = malloc(2);
+            strcpy(gen->bytecode->codes[gen->bytecode->count - 1].operand.string_value, " ");
+            add_bytecode(gen, BC_BINARY_CONCAT);
+            add_bytecode(gen, BC_BINARY_CONCAT);
+        }
+        add_bytecode(gen, BC_PRINT);
+    } else {
+        generate_bytecode(gen, node->data.print.expr);
+        add_bytecode(gen, BC_PRINT);
+    }
+}
+
+void generate_bytecode_expression_list(ByteCodeGen* gen, ASTNode* node) {
+    if (node->type != AST_EXPRESSION_LIST) return;
+    for (int i = 0; i < node->data.expression_list.expression_count; i++) {
+        generate_bytecode(gen, node->data.expression_list.expressions[i]);
+    }
 }
 
 void generate_bytecode_assign(ByteCodeGen* gen, ASTNode* node) {
@@ -97,14 +122,8 @@ void generate_bytecode_assign(ByteCodeGen* gen, ASTNode* node) {
 
 void generate_bytecode_binop(ByteCodeGen* gen, ASTNode* node) {
     if (node->type != AST_BINOP) return;
-    
-    // 生成左操作数字节码
     generate_bytecode(gen, node->data.binop.left);
-    
-    // 生成右操作数字节码
     generate_bytecode(gen, node->data.binop.right);
-    
-    // 添加操作指令
     switch (node->data.binop.op) {
         case OP_ADD:
             add_bytecode(gen, BC_BINARY_ADD);
@@ -123,6 +142,12 @@ void generate_bytecode_binop(ByteCodeGen* gen, ASTNode* node) {
             break;
         case OP_POW:
             add_bytecode(gen, BC_BINARY_POW);
+            break;
+        case OP_CONCAT:
+            add_bytecode(gen, BC_BINARY_CONCAT);
+            break;
+        case OP_REPEAT:
+            add_bytecode(gen, BC_BINARY_REPEAT);
             break;
     }
 }
@@ -179,6 +204,9 @@ void generate_bytecode(ByteCodeGen* gen, ASTNode* node) {
             break;
         case AST_PRINT:
             generate_bytecode_print(gen, node);
+            break;
+        case AST_EXPRESSION_LIST:
+            generate_bytecode_expression_list(gen, node);
             break;
         case AST_ASSIGN:
             generate_bytecode_assign(gen, node);
@@ -252,6 +280,12 @@ void print_bytecode(ByteCodeList* list) {
                 break;
             case BC_UNARY_PLUS:
                 printf("UNARY_PLUS\n");
+                break;
+            case BC_BINARY_CONCAT:
+                printf("BINARY_CONCAT\n");
+                break;
+            case BC_BINARY_REPEAT:
+                printf("BINARY_REPEAT\n");
                 break;
         }
     }

@@ -14,6 +14,8 @@ typedef enum {
     BC_BINARY_DIV,         
     BC_BINARY_MOD,         
     BC_BINARY_POW,         
+    BC_BINARY_CONCAT,      
+    BC_BINARY_REPEAT,      
     BC_UNARY_MINUS,        
     BC_UNARY_PLUS          
 } ByteCodeInstruction;

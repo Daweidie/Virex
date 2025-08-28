@@ -29,6 +29,25 @@ ASTNode* create_print_node(ASTNode* expr) {
     return node;
 }
 
+ASTNode* create_expression_list_node() {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_EXPRESSION_LIST;
+    node->data.expression_list.expressions = NULL;
+    node->data.expression_list.expression_count = 0;
+    return node;
+}
+
+void add_expression_to_list(ASTNode* list, ASTNode* expr) {
+    if (!list || list->type != AST_EXPRESSION_LIST || !expr) return;
+    
+    list->data.expression_list.expression_count++;
+    list->data.expression_list.expressions = realloc(
+        list->data.expression_list.expressions,
+        sizeof(ASTNode*) * list->data.expression_list.expression_count
+    );
+    list->data.expression_list.expressions[list->data.expression_list.expression_count - 1] = expr;
+}
+
 ASTNode* create_assign_node(ASTNode* left, ASTNode* right) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = AST_ASSIGN;
@@ -105,6 +124,13 @@ void free_ast(ASTNode* node) {
             free_ast(node->data.print.expr);
             break;
             
+        case AST_EXPRESSION_LIST:
+            for (int i = 0; i < node->data.expression_list.expression_count; i++) {
+                free_ast(node->data.expression_list.expressions[i]);
+            }
+            free(node->data.expression_list.expressions);
+            break;
+            
         case AST_ASSIGN:
             free_ast(node->data.assign.left);
             free_ast(node->data.assign.right);
@@ -160,6 +186,13 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->data.print.expr, indent + 1);
             break;
             
+        case AST_EXPRESSION_LIST:
+            printf("Expression List (%d expressions)\n", node->data.expression_list.expression_count);
+            for (int i = 0; i < node->data.expression_list.expression_count; i++) {
+                print_ast(node->data.expression_list.expressions[i], indent + 1);
+            }
+            break;
+            
         case AST_ASSIGN:
             printf("Assign\n");
             print_ast(node->data.assign.left, indent + 1);
@@ -175,6 +208,8 @@ void print_ast(ASTNode* node, int indent) {
                 case OP_DIV: printf("Div (/)\n"); break;
                 case OP_MOD: printf("Mod (%%)\n"); break;
                 case OP_POW: printf("Pow (**)\n"); break;
+                case OP_CONCAT: printf("Concat (+)\n"); break;
+                case OP_REPEAT: printf("Repeat (*)\n"); break;
             }
             print_ast(node->data.binop.left, indent + 1);
             print_ast(node->data.binop.right, indent + 1);
